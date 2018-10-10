@@ -2,8 +2,8 @@ var ansi = require('ansi');
 var keypress = require('keypress');
 
 keypress(process.stdin);
-process.stdin.setRawMode(true);
-process.stdin.resume();
+process.stdout.write('\x1Bc');
+process.stdout.write('\x1B[?25l');
 
 var cursor = ansi(process.stdout);
 
@@ -37,56 +37,61 @@ for(var i=0;i<sizeY;i++){
 }
 
 //Apple
-aposeX = Math.ceil(Math.random() * (sizeX - 2)) + 1;
-aposeY = Math.ceil(Math.random() * (sizeY - 2)) + 1;
+aposeX = Math.ceil(Math.random() * (sizeX - 3)) + 1;
+aposeY = Math.ceil(Math.random() * (sizeY - 3)) + 1;
 cursor.bg.red();
 cursor.goto(aposeX,aposeY).write(' ');
+cursor.reset();
 
-
-
-var keypress = require('keypress');
- 
-// make `process.stdin` begin emitting "keypress" events
-keypress(process.stdin);
- 
-// listen for the "keypress" event
-process.stdin.on('keypress', function (ch, key) {
-  console.log('got "keypress"', key);
-  if (key && key.ctrl && key.name == 'c') {
-    cursor.bg.reset();
-    process.stdin.pause();
-} else if (key.name == 'right') {
-    dirX = 1;
-    dirY = 0;
-} else if (key.name == 'left') {
-    dirX = -1;
-    dirY = 0;
-} else if (key.name == 'up') {
-    dirX = 0;
-    dirY = -1;
-} else if (key.name == 'down') {
-    dirX = 0;
-    dirY = 1;
-}
-});
- 
 process.stdin.setRawMode(true);
 process.stdin.resume();
+process.setMaxListeners(0);
+game();
+
 
 function game(){
+    var keypress = require('keypress');
+
+    // make `process.stdin` begin emitting "keypress" events
+    keypress(process.stdin);
+     
+    // listen for the "keypress" event
+    process.stdin.on('keypress', function (ch, key) {
+        if (key && key.ctrl && key.name == 'c') {
+          cursor.bg.reset();
+          process.stdin.pause();
+      } else if (key.name == 'right') {
+          dirX = 1;
+          dirY = 0;
+      } else if (key.name == 'left') {
+          dirX = -1;
+          dirY = 0;
+      } else if (key.name == 'up') {
+          dirX = 0;
+          dirY = -1;
+      } else if (key.name == 'down') {
+          dirX = 0;
+          dirY = 1;
+      }
+    }); 
+    
+    cursor.bg.reset();
+    cursor.goto(poseX,poseY).write(' ');
 
     //Snake
+    poseX+=dirX;
+    poseY+=dirY;
     cursor.bg.green();
     cursor.goto(poseX,poseY).write(' ');
-    cursor.bg.reset();
+    
 
-    cursor(1, height + 2).write( "Points: " + points.toString());
-    cursor.goto(1, height + 3).write( "Speed: " + speed.toString());
+    //cursor.goto(1, sizeY + 2).write( "Points: " + points.toString());
+    //cursor.goto(1, sizeY + 3).write( "Speed: " + speed.toString());
 
-    if (poseX == 1 || poseX == width || poseY == 1 || poseY == height) {
+    if (poseX <= 1 || poseX >= sizeX || poseY <= 1 || poseY >= sizeY) {
         cursor.blue();
         cursor.bg.red();
-        setText(width / 2 - 6, height / 2, "  Game Over  ");
+        cursor.goto(sizeX / 2 -4 , sizeY / 2).write( "Game Over");
         cursor.reset();
         cursor.bg.reset();
         process.stdout.write('\x1B[?25h');
@@ -101,6 +106,8 @@ function game(){
         cursor.bg.red();
         cursor.goto(aposeX,aposeY).write(' ');
     }
+
+    
     
     setTimeout(game, 1000 / speed);
 }
